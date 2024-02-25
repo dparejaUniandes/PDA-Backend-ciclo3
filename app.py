@@ -64,4 +64,4 @@ def add_urls(app):
 app = create_flask_app()
 db.init_app(app)
 db.create_all()
-app.run()
+app.run(port=21345)
