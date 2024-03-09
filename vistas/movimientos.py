@@ -4,7 +4,7 @@ from flask_restful import Resource
 from marshmallow import ValidationError
 from modelos import Movimiento, MovimientoSchema, Propiedad, db
 from vistas.utils import buscar_propiedad
-from sqlalchemy import exc
+from sqlalchemy import exc, or_, and_
 
 movimiento_schema = MovimientoSchema()
 
@@ -13,9 +13,14 @@ class VistaMovimientos(Resource):
 
     @jwt_required()
     def post(self, id_propiedad):
-        resultado_buscar_propiedad = buscar_propiedad(id_propiedad, current_user.id)
-        if resultado_buscar_propiedad.error:
-           return resultado_buscar_propiedad.error
+        propiedad = Propiedad.query.filter(and_(Propiedad.id == id_propiedad,
+                                                or_(Propiedad.id_administrador == current_user.id,
+                                                    Propiedad.id_usuario == current_user.id))).one_or_none()
+        if not propiedad:
+            return {
+                'message': 'Propiedad no encontrada'
+            }, 404
+
         try:
             movimiento = movimiento_schema.load(request.json, session=db.session)
             movimiento.id_propiedad = id_propiedad
@@ -30,9 +35,18 @@ class VistaMovimientos(Resource):
 
     @jwt_required()
     def get(self, id_propiedad):
-        resultado_buscar_propiedad = buscar_propiedad(id_propiedad, current_user.id)
-        if resultado_buscar_propiedad.error:
-           return resultado_buscar_propiedad.error
-        movimientos = db.session.query(Movimiento).join(Propiedad).filter(Propiedad.id_usuario == current_user.id, Propiedad.id == id_propiedad).all()
+        propiedad = Propiedad.query.filter(and_(Propiedad.id == id_propiedad,
+                                                or_(Propiedad.id_administrador == current_user.id,
+                                                    Propiedad.id_usuario == current_user.id))).one_or_none()
+
+        if not propiedad:
+            return {
+                'mensaje': 'propiedad no encontrada'
+            }, 404
+
+        movimientos = db.session.query(Movimiento).join(Propiedad).filter(
+            and_(Propiedad.id == id_propiedad,
+                 or_(Propiedad.id_usuario == current_user.id,
+                     Propiedad.id_administrador == current_user.id),
+                 )).all()
         return movimiento_schema.dump(movimientos, many=True)
-    

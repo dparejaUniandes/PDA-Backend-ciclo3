@@ -103,12 +103,14 @@ class Reserva(db.Model):
 class Movimiento(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     fecha = db.Column(db.DateTime, nullable=False)
-    concepto = db.Column(db.String(128), nullable=False)
+    concepto = db.Column(db.String(128), nullable=True)
+    categoria = db.Column(db.String(128), nullable=True)
+    descripcion = db.Column(db.String(300), nullable=True)
     valor = db.Column(db.Float, nullable=False)
     id_reserva = db.Column(db.Integer, db.ForeignKey('reserva.id'), nullable=True)
     tipo_movimiento = db.Column(db.Enum(TipoMovimiento), nullable=False)
     id_propiedad = db.Column(db.Integer, db.ForeignKey('propiedad.id'))
-    
+
     CONCEPTO_RESERVA = 'RESERVA'
     CONCEPTO_COMISION = 'COMISION'
     

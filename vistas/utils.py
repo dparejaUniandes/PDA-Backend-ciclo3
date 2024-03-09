@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Tuple
 from modelos import Propiedad, Usuario, Reserva, Movimiento, db
+from sqlalchemy import or_, and_
 
 
 @dataclass
@@ -9,9 +10,13 @@ class ResultadoBuscarPropiedad:
     error: Tuple = ()
 
 
-def buscar_propiedad(id_propiedad: int, id_administrador: int) -> ResultadoBuscarPropiedad:
+def buscar_propiedad(id_propiedad: int, id_usuario: int) -> ResultadoBuscarPropiedad:
         buscar_propiedad = ResultadoBuscarPropiedad()
-        propiedad = Propiedad.query.filter(Propiedad.id == id_propiedad, Propiedad.id_usuario == id_administrador).one_or_none()
+        propiedad = Propiedad.query.filter(or_(
+                and_(Propiedad.id == id_propiedad,
+                     Propiedad.id_administrador == id_usuario),
+                and_(Propiedad.id == id_propiedad,
+                     Propiedad.id_usuario == id_usuario))).one_or_none()
         if not propiedad:
             buscar_propiedad.error = {'mensaje': 'propiedad no encontrada'}, 404
         buscar_propiedad.propiedad = propiedad

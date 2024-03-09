@@ -2,8 +2,8 @@ from flask import request
 from flask_jwt_extended import current_user, jwt_required
 from flask_restful import Resource
 from marshmallow import ValidationError
-from sqlalchemy import exc
-from modelos import TipoMovimiento, Movimiento, db, ReservaSchema
+from sqlalchemy import exc, and_
+from modelos import TipoMovimiento, Movimiento, db, ReservaSchema, Propiedad
 from vistas.utils import buscar_propiedad
 
 reserva_schema = ReservaSchema()
@@ -13,10 +13,12 @@ class VistaReservas(Resource):
 
     @jwt_required()
     def post(self, id_propiedad):
-        resultado_buscar_propiedad = buscar_propiedad(id_propiedad, current_user.id)
-        if resultado_buscar_propiedad.error:
-           return resultado_buscar_propiedad.error
-        
+        propiedad = Propiedad.query.filter(and_(Propiedad.id == id_propiedad,
+                                                Propiedad.id_administrador == current_user.id)).first()
+
+        if not propiedad:
+            return {'mensaje': 'Propiedad no encontrada para el administrador'}, 404
+
         try:
             reserva = reserva_schema.load(request.json, session=db.session)
             reserva.id_propiedad = id_propiedad

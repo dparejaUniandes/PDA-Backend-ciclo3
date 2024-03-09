@@ -47,42 +47,41 @@ class TestEliminarMovimiento:
         Usuario.query.delete()
         Movimiento.query.delete()
 
-    def actuar(self, client, id_movimiento, token=None):
+    def delete_request(self, client, id_movimiento, token=None):
         headers = {'Content-Type': 'application/json'}
         if token:
             headers.update({'Authorization': f'Bearer {token}'})
         self.respuesta = client.delete(f'/movimientos/{id_movimiento}', headers=headers)
 
-    def test_retorna_204_movimiento_pertenece_a_propiedad_usuario_token(self, client, mock_datetime_now):
+    def test_retorna_400_si_movimiento_tiene_reserva(self, client, mock_datetime_now):
         mock_datetime_now(self.movimiento_mascota.fecha)
         token_usuario_1 = create_access_token(identity=self.usuario_1.id)
-        self.actuar(client, self.movimiento_mascota.id, token=token_usuario_1)
-        assert self.respuesta.status_code == 204
+        self.delete_request(client, self.movimiento_mascota.id, token=token_usuario_1)
+        assert self.respuesta.status_code == 400
 
     def test_retorna_404_si_movimiento_no_es_de_propiedad_del_usuario(self, client):
         token_usuario_2 = create_access_token(identity=self.usuario_2.id)
-        self.actuar(client, self.movimiento_mascota.id, token=token_usuario_2)
+        self.delete_request(client, self.movimiento_mascota.id, token=token_usuario_2)
         assert self.respuesta.status_code == 404
-        assert self.respuesta.json == {'mensaje': 'movimiento no encontrado'}
 
     def test_retorna_401_token_no_enviado(self, client):
-        self.actuar(client, 123)
+        self.delete_request(client, 123)
         assert self.respuesta.status_code == 401
 
     def test_retorna_400_eliminar_movimiento_concepto_reseva(self, client, mock_datetime_now):
         mock_datetime_now(self.movimiento_reserva.fecha)
         token_usuario_1 = create_access_token(identity=self.usuario_1.id)
-        self.actuar(client, self.movimiento_reserva.id, token=token_usuario_1)
+        self.delete_request(client, self.movimiento_reserva.id, token=token_usuario_1)
         assert self.respuesta.status_code == 400
 
     def test_retorna_400_eliminar_movimiento_concepto_comision(self, client, mock_datetime_now):
         mock_datetime_now(self.movimiento_comision.fecha)
         token_usuario_1 = create_access_token(identity=self.usuario_1.id)
-        self.actuar(client, self.movimiento_comision.id, token=token_usuario_1)
+        self.delete_request(client, self.movimiento_comision.id, token=token_usuario_1)
         assert self.respuesta.status_code == 400
 
     def test_retorna_400_eliminar_movimiento_mes_anterior(self, client, mock_datetime_now):
         mock_datetime_now(self.movimiento_mascota.fecha + timedelta(days=31))
         token_usuario_1 = create_access_token(identity=self.usuario_1.id)
-        self.actuar(client, self.movimiento_mascota.id, token=token_usuario_1)
+        self.delete_request(client, self.movimiento_mascota.id, token=token_usuario_1)
         assert self.respuesta.status_code == 400

@@ -15,10 +15,10 @@ class TestObtenerReservas:
 
         self.propiedad_1_usu_1 = Propiedad(nombre_propiedad='propiedad cerca a la quebrada', ciudad='Boyaca', municipio='Paipa',
                               direccion='Vereda Toibita', nombre_propietario='Jorge Loaiza', numero_contacto='1234567', banco=Banco.BANCOLOMBIA,
-                              numero_cuenta='000033322255599', id_usuario=self.usuario_1.id)
+                              numero_cuenta='000033322255599', id_usuario=self.usuario_1.id, id_administrador=self.usuario_1.id)
         self.propiedad_2_usu_1 = Propiedad(nombre_propiedad='Apto edificio Alto', ciudad='Bogota',
                               direccion='cra 100#7-21 apto 1302', nombre_propietario='Carlos Julio', numero_contacto='666777999', banco=Banco.NEQUI,
-                              numero_cuenta='3122589635', id_usuario=self.usuario_1.id)
+                              numero_cuenta='3122589635', id_usuario=self.usuario_1.id, id_administrador=self.usuario_1.id)
         db.session.add(self.propiedad_1_usu_1)
         db.session.add(self.propiedad_2_usu_1)
         db.session.commit()
@@ -35,7 +35,7 @@ class TestObtenerReservas:
         Reserva.query.delete()
         Usuario.query.delete()
 
-    def actuar(self, client, id_propiedad, token=None):
+    def get_request(self, client, id_propiedad, token=None):
         headers = {'Content-Type': 'application/json'}
         if token:
             headers.update({'Authorization': f'Bearer {token}'})
@@ -43,29 +43,33 @@ class TestObtenerReservas:
         self.respuesta_json = self.respuesta.json
 
     def test_retorna_lista_reservas_de_propiedad(self, client):
+        """
+        Funciona ya que el usuario que esta listando las propiedades es un administrador
+        :param client: el cliente injectado
+        """
         reserva_schema = ReservaSchema()
         token_usuario_1 = create_access_token(identity=self.usuario_1.id)
-        self.actuar(client, self.propiedad_1_usu_1.id, token=token_usuario_1)
+        self.get_request(client, self.propiedad_1_usu_1.id, token=token_usuario_1)
         assert isinstance(self.respuesta_json, list)
         assert [reserva_schema.dump(self.reserva_1)] == self.respuesta_json
     
     def test_retorna_lista_vacia_si_propiedad_no_tiene_reservas(self, client):
         token_usuario_1 = create_access_token(identity=self.usuario_1.id)
-        self.actuar(client, self.propiedad_2_usu_1.id, token=token_usuario_1)
+        self.get_request(client, self.propiedad_2_usu_1.id, token=token_usuario_1)
         assert self.respuesta_json == []
 
     def test_retorna_200_si_propiedad_es_del_usuario(self, client):
         token_usuario_1 = create_access_token(identity=self.usuario_1.id)
-        self.actuar(client, self.propiedad_1_usu_1.id, token=token_usuario_1)
+        self.get_request(client, self.propiedad_1_usu_1.id, token=token_usuario_1)
         assert self.respuesta.status_code == 200
 
     def test_retorna_404_si_propiedad_no_es_del_usuario(self, client):
         token_usuario_1 = create_access_token(identity=self.usuario_1.id)
-        self.actuar(client, 123, token=token_usuario_1)
+        self.get_request(client, 123, token=token_usuario_1)
         assert self.respuesta.status_code == 404
         assert self.respuesta_json == {"mensaje": "propiedad no encontrada"}
 
     def test_retorna_401_token_no_enviado(self, client):
-        self.actuar(client, 123)
+        self.get_request(client, 123)
         assert self.respuesta.status_code == 401
     

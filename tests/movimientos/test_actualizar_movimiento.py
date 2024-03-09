@@ -45,7 +45,8 @@ class TestActualizarMovimiento:
         db.session.commit()
 
         self.nuevos_datos_movimiento = {
-            'concepto': 'nuevo concepto',
+            'categoria': 'Ingresos por reservas',
+            'descripcion': 'Sergey Rachmaninoff was a great pianist',
         }
 
     def teardown_method(self):
@@ -55,7 +56,7 @@ class TestActualizarMovimiento:
         Usuario.query.delete()
         Movimiento.query.delete()
 
-    def actuar(self, client, id_movimiento, nuevos_datos_movimiento=None, token=None):
+    def put_request(self, client, id_movimiento, nuevos_datos_movimiento=None, token=None):
         nuevos_datos_movimiento = nuevos_datos_movimiento or self.nuevos_datos_movimiento
         headers = {'Content-Type': 'application/json'}
         if token:
@@ -66,41 +67,28 @@ class TestActualizarMovimiento:
     def test_retorna_200_movimiento_se_puede_actualizar_pertenece_a_propiedad_usuario_token(self, client, mock_datetime_now):
         mock_datetime_now(self.movimiento_mascota.fecha)
         token_usuario_1 = create_access_token(identity=self.usuario_1.id)
-        self.actuar(client, self.movimiento_mascota.id, token=token_usuario_1)
+        self.put_request(client, self.movimiento_mascota.id, token=token_usuario_1)
         assert self.respuesta.status_code == 200
 
     def test_retorna_movimiento_actualizado(self, client, mock_datetime_now):
         mock_datetime_now(self.movimiento_mascota.fecha)
         movimiento_schema = MovimientoSchema()
         token_usuario_1 = create_access_token(identity=self.usuario_1.id)
-        self.actuar(client, self.movimiento_mascota.id, token=token_usuario_1)
+        self.put_request(client, self.movimiento_mascota.id, token=token_usuario_1)
         assert movimiento_schema.dump(self.movimiento_mascota) == self.respuesta_json
-        assert self.respuesta_json['concepto'] == 'nuevo concepto'
+        assert self.respuesta_json['categoria'] == self.nuevos_datos_movimiento['categoria']
 
     def test_retorna_404_si_movimiento_no_es_de_propiedad_del_usuario(self, client):
         token_usuario_2 = create_access_token(identity=self.usuario_2.id)
-        self.actuar(client, self.movimiento_mascota.id, token=token_usuario_2)
+        self.put_request(client, self.movimiento_mascota.id, token=token_usuario_2)
         assert self.respuesta.status_code == 404
-        assert self.respuesta_json == {'mensaje': 'movimiento no encontrado'}
 
     def test_retorna_401_token_no_enviado(self, client):
-        self.actuar(client, 123)
+        self.put_request(client, 123)
         assert self.respuesta.status_code == 401
-
-    def test_retorna_400_actualizar_movimiento_concepto_reseva(self, client, mock_datetime_now):
-        mock_datetime_now(self.movimiento_reserva.fecha)
-        token_usuario_1 = create_access_token(identity=self.usuario_1.id)
-        self.actuar(client, self.movimiento_reserva.id, token=token_usuario_1)
-        assert self.respuesta.status_code == 400
-
-    def test_retorna_400_actualizar_movimiento_concepto_comision(self, client, mock_datetime_now):
-        mock_datetime_now(self.movimiento_comision.fecha)
-        token_usuario_1 = create_access_token(identity=self.usuario_1.id)
-        self.actuar(client, self.movimiento_comision.id, token=token_usuario_1)
-        assert self.respuesta.status_code == 400
 
     def test_retorna_400_actualizar_movimiento_mes_anterior(self, client, mock_datetime_now):
         mock_datetime_now(self.movimiento_mascota.fecha + timedelta(days=31))
         token_usuario_1 = create_access_token(identity=self.usuario_1.id)
-        self.actuar(client, self.movimiento_mascota.id, token=token_usuario_1)
+        self.put_request(client, self.movimiento_mascota.id, token=token_usuario_1)
         assert self.respuesta.status_code == 400

@@ -14,10 +14,10 @@ class TestObtenerMovimientos:
 
         self.propiedad_1_usu_1 = Propiedad(nombre_propiedad='propiedad cerca a la quebrada', ciudad='Boyaca', municipio='Paipa',
                               direccion='Vereda Toibita', nombre_propietario='Jorge Loaiza', numero_contacto='1234567', banco=Banco.BANCOLOMBIA,
-                              numero_cuenta='000033322255599', id_usuario=self.usuario_1.id)
+                              numero_cuenta='000033322255599', id_usuario=self.usuario_1.id, id_administrador=self.usuario_1.id)
         self.propiedad_2_usu_1 = Propiedad(nombre_propiedad='Apto edificio Alto', ciudad='Bogota',
                               direccion='cra 100#7-21 apto 1302', nombre_propietario='Carlos Julio', numero_contacto='666777999', banco=Banco.NEQUI,
-                              numero_cuenta='3122589635', id_usuario=self.usuario_1.id)
+                              numero_cuenta='3122589635', id_usuario=self.usuario_1.id, id_administrador=self.usuario_1.id)
         db.session.add(self.propiedad_1_usu_1)
         db.session.add(self.propiedad_2_usu_1)
         db.session.commit()

@@ -44,7 +44,7 @@ class TestCrearMovimiento:
         Usuario.query.delete()
         Movimiento.query.delete()
 
-    def actuar(self, client, id_propiedad, datos_movimiento=None, token=None):
+    def post_request(self, client, id_propiedad, datos_movimiento=None, token=None):
         datos_movimiento = datos_movimiento or self.datos_movimiento
         headers = {'Content-Type': 'application/json'}
         if token:
@@ -54,12 +54,12 @@ class TestCrearMovimiento:
 
     def test_retorna_201(self, client):
         token_usuario_1 = create_access_token(identity=self.usuario_1.id)
-        self.actuar(client, self.propiedad_1_usu_1.id, token=token_usuario_1)
+        self.post_request(client, self.propiedad_1_usu_1.id, token=token_usuario_1)
         assert self.respuesta.status_code == 201
 
     def test_retorna_movimiento_creado(self, client):
         token_usuario_1 = create_access_token(identity=self.usuario_1.id)
-        self.actuar(client, self.propiedad_1_usu_1.id, token=token_usuario_1)
+        self.post_request(client, self.propiedad_1_usu_1.id, token=token_usuario_1)
         assert self.respuesta_json
         assert 'id' in self.respuesta_json
         assert 'fecha' in self.respuesta_json
@@ -70,23 +70,23 @@ class TestCrearMovimiento:
 
     def test_crea_registro_db(self, client):
         token_usuario_1 = create_access_token(identity=self.usuario_1.id)
-        self.actuar(client, self.propiedad_1_usu_1.id, token=token_usuario_1)
+        self.post_request(client, self.propiedad_1_usu_1.id, token=token_usuario_1)
         assert Movimiento.query.filter(Movimiento.id == self.respuesta_json['id'],
                                        Movimiento.id_propiedad == self.propiedad_1_usu_1.id).one_or_none()
 
     def test_retorna_401_token_no_enviado(self, client):
         self.datos_movimiento.update({'id_reserva': self.reserva_1.id})
-        self.actuar(client, self.propiedad_1_usu_1.id)
+        self.post_request(client, self.propiedad_1_usu_1.id)
         assert self.respuesta.status_code == 401
 
     def test_retorna_404_crear_movimiento_propiedad_otro_usuario(self, client):
         token_usuario_2 = create_access_token(identity=self.usuario_2.id)
-        self.actuar(client, self.propiedad_1_usu_1.id, token=token_usuario_2)
+        self.post_request(client, self.propiedad_1_usu_1.id, token=token_usuario_2)
         assert self.respuesta.status_code == 404
 
     def test_crea_movimiento_propiedad_enviada_url(self, client):
         token_usuario_1 = create_access_token(identity=self.usuario_1.id)
         self.datos_movimiento.update({'id_propiedad': 123})
-        self.actuar(client, self.propiedad_1_usu_1.id, token=token_usuario_1)
+        self.post_request(client, self.propiedad_1_usu_1.id, token=token_usuario_1)
         assert Movimiento.query.filter(Movimiento.id == self.respuesta_json['id'],
                                        Movimiento.id_propiedad == self.propiedad_1_usu_1.id).one_or_none()

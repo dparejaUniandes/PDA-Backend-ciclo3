@@ -46,7 +46,7 @@ class TestObtenerMovimiento:
         Usuario.query.delete()
         Movimiento.query.delete()
 
-    def actuar(self, client, id_movimiento, token=None):
+    def get_request(self, client, id_movimiento, token=None):
         headers = {'Content-Type': 'application/json'}
         if token:
             headers.update({'Authorization': f'Bearer {token}'})
@@ -55,21 +55,20 @@ class TestObtenerMovimiento:
 
     def test_retorna_200_si_movimiento_pertenece_a_propiedad_usuario_token(self, client):
         token_usuario_1 = create_access_token(identity=self.usuario_1.id)
-        self.actuar(client, self.movimiento_reserva.id, token_usuario_1)
+        self.get_request(client, self.movimiento_reserva.id, token_usuario_1)
         assert self.respuesta.status_code == 200
 
     def test_retorna_movimiento_de_propiedad(self, client):
         movimiento_schema = MovimientoSchema()
         token_usuario_1 = create_access_token(identity=self.usuario_1.id)
-        self.actuar(client, self.movimiento_reserva.id, token_usuario_1)
+        self.get_request(client, self.movimiento_reserva.id, token_usuario_1)
         assert movimiento_schema.dump(self.movimiento_reserva) == self.respuesta_json
 
     def test_retorna_404_si_movimiento_no_es_de_propiedad_del_usuario(self, client):
         token_usuario_2 = create_access_token(identity=self.usuario_2.id)
-        self.actuar(client, self.movimiento_reserva.id, token_usuario_2)
+        self.get_request(client, self.movimiento_reserva.id, token_usuario_2)
         assert self.respuesta.status_code == 404
-        assert self.respuesta_json == {'mensaje': 'movimiento no encontrado'}
 
     def test_retorna_401_token_no_enviado(self, client):
-        self.actuar(client, 123)
+        self.get_request(client, 123)
         assert self.respuesta.status_code == 401

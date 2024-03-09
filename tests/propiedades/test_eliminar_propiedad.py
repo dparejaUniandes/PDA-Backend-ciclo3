@@ -13,7 +13,7 @@ class TestEliminarPropiedad:
 
         self.propiedad_1_usu_1 = Propiedad(nombre_propiedad='propiedad cerca a la quebrada', ciudad='Boyaca', municipio='Paipa',
                               direccion='Vereda Toibita', nombre_propietario='Jorge Loaiza', numero_contacto='1234567', banco=Banco.BANCOLOMBIA,
-                              numero_cuenta='000033322255599', id_usuario=self.usuario_1.id)
+                              numero_cuenta='000033322255599', id_usuario=self.usuario_1.id, id_administrador=self.usuario_1.id)
         db.session.add(self.propiedad_1_usu_1)
         db.session.commit()
 
@@ -21,7 +21,7 @@ class TestEliminarPropiedad:
         db.session.rollback()
         Usuario.query.delete()
 
-    def actuar(self, propiedad_id, client, token=None):
+    def delete_request(self, propiedad_id, client, token=None):
         headers = {'Content-Type': 'application/json'}
         if token:
             headers.update({'Authorization': f'Bearer {token}'})
@@ -29,20 +29,20 @@ class TestEliminarPropiedad:
 
     def test_eliminar_propiedad_retorna_204(self, client):
         token_usuario_1 = create_access_token(identity=self.usuario_1.id)
-        self.actuar(self.propiedad_1_usu_1.id, client, token_usuario_1)
+        self.delete_request(self.propiedad_1_usu_1.id, client, token_usuario_1)
         assert self.respuesta.status_code == 204
 
     def test_eliminar_propiedad_elimina_registro_db(self, client):
         token_usuario_1 = create_access_token(identity=self.usuario_1.id)
-        self.actuar(self.propiedad_1_usu_1.id, client, token_usuario_1)
+        self.delete_request(self.propiedad_1_usu_1.id, client, token_usuario_1)
         assert Propiedad.query.filter(Propiedad.id == self.propiedad_1_usu_1.id).first() is None
 
     def test_eliminar_propiedad_que_no_pertenece_al_usuario_retorna_404(self, client):
         token_usuario_2 = create_access_token(identity=self.usuario_2.id)
-        self.actuar(self.propiedad_1_usu_1.id, client, token_usuario_2)
+        self.delete_request(self.propiedad_1_usu_1.id, client, token_usuario_2)
         assert self.respuesta.status_code == 404
 
     def test_eliminar_propiedad_sin_token_retorna_401(self, client):
-        self.actuar(self.propiedad_1_usu_1.id, client)
+        self.delete_request(self.propiedad_1_usu_1.id, client)
         assert self.respuesta.status_code == 401
     

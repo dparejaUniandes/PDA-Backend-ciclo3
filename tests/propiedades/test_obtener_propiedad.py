@@ -1,5 +1,5 @@
 from flask_jwt_extended import create_access_token
-from modelos import Usuario, Propiedad, Banco, db, PropiedadSchema, TipoUsuario
+from modelos import Usuario, Propiedad, Banco, db, PropiedadSchema, TipoUsuario, Propietario, TipoIdentificacion
 
 
 class TestObtenerPropiedad:
@@ -15,6 +15,17 @@ class TestObtenerPropiedad:
                               direccion='Vereda Toibita', nombre_propietario='Jorge Loaiza', numero_contacto='1234567', banco=Banco.BANCOLOMBIA,
                               numero_cuenta='000033322255599', id_usuario=self.usuario_1.id, id_administrador=self.usuario_1.id)
         db.session.add(self.propiedad_1_usu_1)
+        db.session.commit()
+
+        self.propietario_usu1 = Propietario(id_usuario=self.usuario_1.id,
+                    nombre='John',
+                    apellidos='Doe',
+                    tipo_identificacion=TipoIdentificacion.CEDULA_DE_CIUDADANIA.value,
+                    identificacion='12345',
+                    correo='john@example.com',
+                    celular='1234567890')
+
+        db.session.add(self.propietario_usu1)
         db.session.commit()
 
     def teardown_method(self):

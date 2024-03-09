@@ -18,8 +18,6 @@ from vistas.sign_in_propietarios import VistaSignInPropietarios
 from vistas.tipo_identificacion import VistaTipoIdentificacion
 from vistas.tipo_usuario import VistaTipoUsuario
 
-app = None
-
 
 def create_flask_app():
     app = Flask(__name__)
@@ -64,5 +62,6 @@ def add_urls(app):
 app = create_flask_app()
 db.init_app(app)
 db.create_all()
+
 if __name__ == "__main__":
-    app.run(port=3214)
+    app.run()
