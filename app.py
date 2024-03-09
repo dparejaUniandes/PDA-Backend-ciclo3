@@ -25,7 +25,6 @@ def create_flask_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['JWT_SECRET_KEY'] = 'frase-secreta'
     app.config['PROPAGATE_EXCEPTIONS'] = True
-    app.config['CORS_HEADERS'] = 'Content-Type'
 
     app_context = app.app_context()
     app_context.push()
