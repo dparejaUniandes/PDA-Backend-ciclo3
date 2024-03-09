@@ -34,6 +34,7 @@ pipeline {
                 script {
                     docker.image('python:3.7.6').inside {
                         sh '''
+                            pip install --user --upgrade pip
                             pip install --user -r requirements.txt
                         '''
                     }
