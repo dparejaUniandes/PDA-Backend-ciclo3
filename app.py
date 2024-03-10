@@ -29,7 +29,7 @@ def create_flask_app():
     app_context = app.app_context()
     app_context.push()
     add_urls(app)
-    CORS(app)
+    CORS(app, origins=["https://misw2401-202411-frontendgr14-00fa02fac77b.herokuapp.com"])
 
     jwt = JWTManager(app)
 
